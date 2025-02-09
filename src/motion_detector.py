@@ -1,27 +1,22 @@
-import cv2
+import numpy as np
 
 class MotionDetector:
     def __init__(self):
         self.previous_frame = None
 
     def detect_motion(self, frame):
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        gray = np.dot(frame[...,:3], [0.2989, 0.5870, 0.1140])
+        gray = gray.astype(np.uint8)
 
         if self.previous_frame is None:
             self.previous_frame = gray
             return False
 
-        frame_delta = cv2.absdiff(self.previous_frame, gray)
-        thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
-        thresh = cv2.dilate(thresh, None, iterations=2)
-        contours, _ = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        frame_delta = np.abs(self.previous_frame - gray)
+        thresh = np.where(frame_delta > 25, 255, 0).astype(np.uint8)
         self.previous_frame = gray
 
-        for contour in contours:
-            if cv2.contourArea(contour) < 500:
-                continue
+        if np.sum(thresh) > 500:
             return True
 
         return False

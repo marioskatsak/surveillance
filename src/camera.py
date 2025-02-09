@@ -1,6 +1,7 @@
-import cv2
-import datetime
 from picamera2 import Picamera2
+from PIL import Image, ImageDraw, ImageFont
+import datetime
+import io
 
 class Camera:
     def __init__(self):
@@ -16,8 +17,11 @@ class Camera:
 
     def add_timestamp(self, frame):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cv2.putText(frame, timestamp, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-        return frame
+        image = Image.fromarray(frame)
+        draw = ImageDraw.Draw(image)
+        font = ImageFont.load_default()
+        draw.text((10, frame.shape[0] - 20), timestamp, font=font, fill=(0, 255, 0))
+        return image
 
     def get_video_feed(self):
         while True:
@@ -25,10 +29,11 @@ class Camera:
             if frame is None:
                 continue
             frame = self.add_timestamp(frame)
-            _, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
+            with io.BytesIO() as output:
+                frame.save(output, format="JPEG")
+                frame_bytes = output.getvalue()
             yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n\r\n')
 
     def release(self):
         self.picam2.stop()

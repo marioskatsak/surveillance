@@ -33,14 +33,14 @@ This project is a camera surveillance system that detects motion, records video 
     - Select `Camera` and enable it.
     - Reboot the Raspberry Pi.
 
-3. Install OpenCV:
-    ```bash
-    sudo apt-get install python3-opencv
-    ```
-
-4. Install `picamera2`:
+3. Install `picamera2`:
     ```bash
     sudo apt-get install -y python3-picamera2
+    ```
+
+4. Install `Pillow`:
+    ```bash
+    pip install pillow
     ```
 
 5. Install the necessary development libraries for `pyaudio`:

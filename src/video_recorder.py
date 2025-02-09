@@ -1,34 +1,36 @@
-import cv2
-import ffmpeg
 import os
+import ffmpeg
+from PIL import Image
 from audio_recorder import AudioRecorder
 
 class VideoRecorder:
     def __init__(self):
         self.is_recording = False
-        self.video_writer = None
+        self.frames = []
         self.audio_recorder = AudioRecorder()
 
     def start_recording(self, output_path):
         if not self.is_recording:
             self.video_output_path = output_path
             self.audio_output_path = output_path.replace('.avi', '.wav')
-
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            self.video_writer = cv2.VideoWriter(self.video_output_path, fourcc, 20.0, (640, 480))
+            self.frames = []
             self.audio_recorder.start_recording(self.audio_output_path)
             self.is_recording = True
 
     def record_frame(self, frame):
         if self.is_recording:
-            self.video_writer.write(frame)
+            self.frames.append(frame)
 
     def stop_recording(self):
         if self.is_recording:
-            self.video_writer.release()
-            self.audio_recorder.stop_recording()
             self.is_recording = False
+            self.audio_recorder.stop_recording()
+            self.save_video()
             self.combine_audio_video()
+
+    def save_video(self):
+        if self.frames:
+            self.frames[0].save(self.video_output_path, save_all=True, append_images=self.frames[1:], duration=1000/20, loop=0)
 
     def combine_audio_video(self):
         video_input = ffmpeg.input(self.video_output_path)

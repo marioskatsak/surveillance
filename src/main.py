@@ -1,4 +1,3 @@
-import cv2
 from camera import Camera
 from motion_detector import MotionDetector
 from video_recorder import VideoRecorder
@@ -11,8 +10,11 @@ import ffmpeg
 
 def add_timestamp(frame):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cv2.putText(frame, timestamp, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1, cv2.LINE_AA)
-    return frame
+    image = Image.fromarray(frame)
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+    draw.text((10, frame.shape[0] - 20), timestamp, font=font, fill=(0, 255, 0))
+    return image
 
 def combine_videos():
     date = datetime.datetime.now().strftime("%Y%m%d")
@@ -72,19 +74,10 @@ def main():
                 video_recorder.stop_recording()
                 recording_started = False
 
-        cv2.imshow('Video', frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
         # Combine videos every 24 hours
-        # if time.time() - last_combination_time >= 86400:
-        if time.time() - last_combination_time >= 120:
+        if time.time() - last_combination_time >= 86400:
             combine_videos()
             last_combination_time = time.time()
-
-    camera.release()
-    cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
